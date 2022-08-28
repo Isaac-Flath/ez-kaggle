@@ -4,13 +4,10 @@
 __all__ = ['push_fastai_learner']
 
 # %% ../04_models.ipynb 4
-# import os,json,subprocess, shutil
-# import re
-# from fastcore.utils import *
 from .core import *
 from .datasets import *
 from .competition import *
-# from fastcore.all import *
+from pathlib import Path
 
 # %% ../04_models.ipynb 5
 def push_fastai_learner(learner, # Fastai Learner
@@ -32,7 +29,7 @@ def push_fastai_learner(learner, # Fastai Learner
     
     print(local_path)
     orig_path = learner.path
-    learner.path = local_path.parent
+    learner.path = local_path
     learner.export(model_fname)
     learner.path = orig_path
     push_dataset(local_path,version_comment)

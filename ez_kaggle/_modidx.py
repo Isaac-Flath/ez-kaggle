@@ -23,4 +23,5 @@ d = { 'settings': { 'branch': 'master',
                                  'ez_kaggle.setup.get_config_values': ('setup.html#get_config_values', 'ez_kaggle/setup.py'),
                                  'ez_kaggle.setup.get_username': ('setup.html#get_username', 'ez_kaggle/setup.py'),
                                  'ez_kaggle.setup.import_kaggle': ('setup.html#import_kaggle', 'ez_kaggle/setup.py'),
+                                 'ez_kaggle.setup.in_kaggle': ('setup.html#in_kaggle', 'ez_kaggle/setup.py'),
                                  'ez_kaggle.setup.setup_comp': ('setup.html#setup_comp', 'ez_kaggle/setup.py')}}}

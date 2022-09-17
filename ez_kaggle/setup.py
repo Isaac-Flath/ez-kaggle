@@ -7,6 +7,7 @@ __all__ = ['IN_KAGGLE', 'in_kaggle', 'import_kaggle', 'get_username', 'get_comp_
 # %% ../00_setup.ipynb 4
 import os, json
 from pathlib import Path
+import configparser
 
 # %% ../00_setup.ipynb 7
 def in_kaggle():
@@ -40,10 +41,9 @@ def get_username():
     return cred['username']
 
 # %% ../00_setup.ipynb 13
-def get_comp_data(competition, install=''):
+def get_comp_data(competition):
     "Get a path to data for `competition`, downloading it if needed"
     if IN_KAGGLE:
-        if install: os.system(f'pip install -Uqq {install}')
         return Path('../input')/competition
     else:
         path = Path(competition)
@@ -64,36 +64,44 @@ def competition_config(
     required_libraries=None, #ie ['fastkaggle','fastai']
     pip_cmd = 'pip'
 ):
-    config = {'competition':competition,
-              'pip_cmd':pip_cmd,
-             'data_path':data_path}
+    
+    config = configparser.ConfigParser()
+    config['DEFAULT'] = {'competition': competition,
+                         'pip_cmd': pip_cmd, 
+                         'data_path': data_path if data_path else '.'}
               
-    if dataset_username is None:
-        print('Inferring dataset_username from credentials')
-        config['datasets_username'] = get_username()
+    un = dataset_username if dataset_username else get_username()
+    config['DEFAULT']['datasets_username'] = un
         
-    if model_dataset_name is None:
-        print('Inferring model_dataset_name from competition')
-        config['model_dataset_name'] = f"models-{competition}"
+    model_ds = model_dataset_name if model_dataset_name else f"models-{competition}"
+    config['DEFAULT']['model_dataset_name'] = model_ds
+            
+    libraries_ds = libraries_dataset_name if libraries_dataset_name else f"libraries-{competition}"
+    config['DEFAULT']['libraries_dataset_name'] = libraries_ds
         
-    if libraries_dataset_name is None:
-        print('Inferring libraries_dataset_name from competition')
-        config['libraries_dataset_name'] = f"libraries-{competition}"
-        
-    if required_libraries is None: 
-        print("Setting required libraries to ['fastkaggle']")
-        config['required_libraries'] = required_libraries = ['fastkaggle']
+    libs = required_libraries if required_libraries else ['fastkaggle']
+    config['DEFAULT']['required_libraries'] = ' '.join(libs)
+
     return config
 
 # %% ../00_setup.ipynb 17
-def setup_comp(competition, install='',dataset_username=None,model_dataset_name=None,libraries_dataset_name=None, required_libraries=None,pip_cmd='pip'):
-    path = get_comp_data(competition,install)
+def setup_comp(competition, # Name of compeition
+               dataset_username=None, # username where datasets will be stored
+               model_dataset_name=None, # name to store model weights
+               libraries_dataset_name=None, # name to store libraries
+               required_libraries=None, # needed libraries for competition
+               pip_cmd='pip' # pip command to use for installation
+              ):
+    path = get_comp_data(competition)
     cfg = competition_config(competition,str(path.parent),dataset_username,model_dataset_name,libraries_dataset_name, required_libraries,pip_cmd)
-    json.dump(cfg,open('fastkaggle.json','w'))
+    with open('fastkaggle.ini', 'w') as configfile: cfg.write(configfile)
 
-# %% ../00_setup.ipynb 19
-def get_config_values(path='.',**cfg_overrides):
-    if path == None: cfg = {}
-    else: cfg = json.load(open(Path(path)/'fastkaggle.json','r'))
-    if cfg_overrides: cfg.update(cfg_overrides)
+# %% ../00_setup.ipynb 23
+def get_config_values(
+    path='.', # path to kaggle.json file or None
+    **cfg_overrides # config values (will override fastkaggle.json if exists
+    ):
+    cfg = configparser.ConfigParser()
+    if path: cfg .read(Path(path)/'fastkaggle.ini')
+    if cfg_overrides: cfg['DEFAULT'].update(cfg_overrides)
     return cfg

@@ -79,7 +79,7 @@ def get_pip_library(pip_library, # name of library for pip to install
                      **kwargs # Config dict to overwrite or replace fastkaggle.json
                    ):    
     '''Download the whl files for pip_library and store in dataset_path'''
-    cfg = get_config_values(cfg_path,**kwargs)
+    cfg = get_config_values(cfg_path,**kwargs)['DEFAULT']
     
     pip_cmd=cfg['pip_cmd']
     dataset_path = Path(cfg_path)/cfg['data_path']/pip_library
@@ -94,11 +94,11 @@ def get_pip_libraries(directory_name,
                      cfg_path='.', # path to fastkaggle.json file or None
                      **kwargs # Config dict to overwrite or replace fastkaggle.json
                    ):    
-    cfg = get_config_values(cfg_path,**kwargs)
+    cfg = get_config_values(cfg_path,**kwargs)['DEFAULT']
     
     pip_cmd=cfg['pip_cmd']
     dataset_path = Path(cfg_path)/cfg['data_path']/directory_name
-    libraries = ' '.join(cfg['required_libraries'])
+    libraries = cfg['required_libraries']
 
     bashCommand = f"{pip_cmd} download {libraries} -d {dataset_path}"
     process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
@@ -127,7 +127,7 @@ def create_dependency_dataset(version_notes = "New Update",
                               **kwargs # Config dict to overwrite or replace fastkaggle.json
                            ):        
     retain = ["dataset-metadata.json"]
-    cfg = get_config_values(cfg_path,**kwargs)
+    cfg = get_config_values(cfg_path,**kwargs)['DEFAULT']
     
     pip_cmd=cfg['pip_cmd']
     local_path = Path(cfg_path)/cfg['data_path']/cfg['libraries_dataset_name']
@@ -144,7 +144,7 @@ def create_dependency_dataset(version_notes = "New Update",
         if item.name in retain: pass
         elif item.is_dir(): shutil.rmtree(item)
         else: item.unlink()      
-    get_pip_libraries(cfg['libraries_dataset_name'],cfg_path) 
+    get_pip_libraries(cfg['libraries_dataset_name'],cfg_path,**kwargs) 
     new_ds = Path(local_path).ls().sorted()
     
     if orig_ds != new_ds: 
@@ -161,7 +161,7 @@ def push_fastai_learner(learner, # Fastai Learner
                         **kwargs # Config dict to overwrite or replace fastkaggle.json
                            ):        
     '''Exports a learner and updates kaggle dataset'''
-    cfg = get_config_values(cfg_path,**kwargs)
+    cfg = get_config_values(cfg_path,**kwargs)['DEFAULT']
     
     local_path = Path(cfg_path)/cfg['data_path']/cfg['model_dataset_name']
     ds_slug = f"{cfg['datasets_username']}/{cfg['model_dataset_name']}"

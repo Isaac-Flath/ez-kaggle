@@ -6,20 +6,22 @@ __all__ = ['nb2names', 'nb_meta', 'push_notebook']
 # %% ../02_kernel.ipynb 4
 import string, ast, json
 from .setup import *
-from nbdev.processors import nb_fmdict
+from nbdev.processors import NBProcessor
 from execnb.nbio import read_nb
 from pathlib import Path
 
+
 # %% ../02_kernel.ipynb 5
 def nb2names(file):
-    nb = read_nb(file)
-    title = nb_fmdict(nb)['title']
+    nbp = NBProcessor('index.ipynb',procs=FrontmatterProc)
+    nbp.process()
+    title = nbp.nb.frontmatter_['title']
     bad_chars = '|'.join(string.punctuation+string.whitespace)
     translator = title.maketrans(bad_chars,'-'*len(bad_chars))
     id = title.translate(translator)
     return title, id.lower()
 
-# %% ../02_kernel.ipynb 8
+# %% ../02_kernel.ipynb 7
 def nb_meta(file, 
             private=False, 
             gpu=False, 
@@ -29,7 +31,7 @@ def nb_meta(file,
             **kwargs # Config dict to overwrite or replace fastkaggle.json
            ):
     "Get the `dict` required for a kernel-metadata.json file"    
-    cfg = get_config_values(cfg_path,**kwargs)
+    cfg = get_config_values(cfg_path,**kwargs)['DEFAULT']
     competition = cfg['competition']
     cfg_datasets = [f"{cfg['datasets_username']}/{cfg['model_dataset_name']}",
                     f"{cfg['datasets_username']}/{cfg['libraries_dataset_name']}"]
@@ -51,10 +53,10 @@ def nb_meta(file,
     if competition: d["competition_sources"] = [f"competitions/{competition}"]
     return d
 
-# %% ../02_kernel.ipynb 10
-def push_notebook(file, cfg_path='.', private=False, gpu=True, internet=True):
+# %% ../02_kernel.ipynb 9
+def push_notebook(file, cfg_path='.', private=False, gpu=True, internet=True, **kwargs):
     "Push notebook `file` to Kaggle Notebooks"
-    meta = nb_meta(file=file, cfg_path=cfg_path, private=private, gpu=gpu, internet=internet)
+    meta = nb_meta(file=file, cfg_path=cfg_path, private=private, gpu=gpu, internet=internet, **kwargs)
     path = Path(file).parent
     nm = 'kernel-metadata.json'
     path.mkdir(exist_ok=True, parents=True)
